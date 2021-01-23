@@ -84,3 +84,24 @@ func (store *ListStruct) Delete(key string) (interface{}, error) {
 	store.Mu.Unlock()
 	return val, nil
 }
+
+func (store *ListStruct) Update(k string, v interface{}) (interface{}, error)  {
+
+	store.Mu.Lock()
+	val , exist := store.Data[k]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	if val.Expiration > 0 {
+		if time.Now().UnixNano() > val.Expiration {
+			return nil, fmt.Errorf("data not found")
+		}
+	}
+
+	val.Value = v
+	store.Data[k] = val
+	store.Mu.Unlock()
+
+	return val, nil
+}
