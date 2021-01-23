@@ -44,6 +44,7 @@ func (store *ListStruct) Get(key string) (value interface{},err error) {
 
 	if val.Expiration > 0 {
 		if time.Now().UnixNano() > val.Expiration {
+			delete(store.Data, k)
 			return nil, fmt.Errorf("data not found")
 		}
 	}
@@ -95,6 +96,7 @@ func (store *ListStruct) Update(k string, v interface{}) (interface{}, error)  {
 
 	if val.Expiration > 0 {
 		if time.Now().UnixNano() > val.Expiration {
+			delete(store.Data, k)
 			return nil, fmt.Errorf("data not found")
 		}
 	}
