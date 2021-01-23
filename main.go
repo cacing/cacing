@@ -1,7 +1,14 @@
 package main
 
-import "log"
+import (
+	"cacing/interface/cli"
+	"log"
+	"os"
+)
 
 func main() {
-	log.Fatalln("external access is not implemented yet, try to run: go test ./...")
+	err := cli.NewCliApp(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
