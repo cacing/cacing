@@ -10,6 +10,7 @@ Cacing is quite simple in memory cache engine.
 * Intuitive API
 * Single executable for server and client
 * Pluggable storage engine
+* Single server instance for single application client
 
 # How to Use
 Starting the server by run:
