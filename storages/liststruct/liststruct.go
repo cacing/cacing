@@ -11,26 +11,26 @@ type Data struct {
 	Val interface{}
 }
 
-// ListStructStorage is storage engine that store data into list of structs
-type ListStructStorage struct {
+// ListStruct is storage engine that store data into list of structs
+type ListStruct struct {
 	Data []*Data
 }
 
-// NewListStructStorage generate new ListStructStorage
-func NewListStructStorage(initialData []*Data) storages.Storage {
-	return &ListStructStorage{
+// NewListStruct generate new ListStruct
+func NewListStruct(initialData []*Data) storages.Storage {
+	return &ListStruct{
 		Data: initialData,
 	}
 }
 
 // GetSize return how many datum in storage
-func (store ListStructStorage) GetSize() uint {
+func (store ListStruct) GetSize() uint {
 	return uint(len(store.Data))
 }
 
 // Get return value with inserted key
 // if this key doesn't exists, return error
-func (store ListStructStorage) Get(key string) (interface{}, error) {
+func (store ListStruct) Get(key string) (interface{}, error) {
 	var val interface{}
 	found := false
 	for _, data := range store.Data {
@@ -50,7 +50,7 @@ func (store ListStructStorage) Get(key string) (interface{}, error) {
 
 // Set to add data into storage
 // and return error if any problems happen
-func (store *ListStructStorage) Set(key string, val interface{}) error {
+func (store *ListStruct) Set(key string, val interface{}) error {
 	newData := &Data{
 		Key: key,
 		Val: val,
