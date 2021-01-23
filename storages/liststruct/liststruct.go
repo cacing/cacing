@@ -65,3 +65,13 @@ func (store *ListStruct) Set(key string, val interface{}, t time.Duration) error
 
 	return nil
 }
+
+func (store *ListStruct) Delete(key string) (interface{}, error) {
+	val , exist := store.Data[key]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	delete(store.Data, key)
+	return val, nil
+}
