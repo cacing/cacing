@@ -15,10 +15,10 @@ Cacing is quite simple in memory cache engine.
 # How to Use
 Starting the server by run:
 ```bash
-$ cacing run --user root --password root
+$ cacing run --user root --password 123 --port 8081
 ```
 
 Connect to server (as client) by run:
 ```bash
-$ cacing connect --user root --password root
+$ cacing connect --dsn cacing://root:123@localhost:8081
 ```
