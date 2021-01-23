@@ -2,6 +2,7 @@ package liststruct
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/hadihammurabi/cacing/storages"
@@ -16,6 +17,7 @@ type Data struct {
 // ListStruct is storage engine that store data into list of structs
 type ListStruct struct {
 	Data map[string]Data
+	Mu sync.RWMutex
 }
 
 // NewListStruct generate new ListStruct
@@ -34,6 +36,7 @@ func (store *ListStruct) GetSize() uint {
 // if this key doesn't exists, return error
 func (store *ListStruct) Get(key string) (value interface{},err error) {
 
+	store.Mu.RLock()
 	val, exist := store.Data[key]
 	if !exist {
 		return nil, fmt.Errorf("data not found")
@@ -44,6 +47,7 @@ func (store *ListStruct) Get(key string) (value interface{},err error) {
 			return nil, fmt.Errorf("data not found")
 		}
 	}
+	store.Mu.RUnlock()
 
 	return val.Value, nil
 
@@ -53,6 +57,7 @@ func (store *ListStruct) Get(key string) (value interface{},err error) {
 // and return error if any problems happen
 func (store *ListStruct) Set(key string, val interface{}, t time.Duration) error {
 
+	store.Mu.Lock()
 	var ex int64
 	if t > 0 {
 		ex = time.Now().Add(t).UnixNano()
@@ -62,16 +67,20 @@ func (store *ListStruct) Set(key string, val interface{}, t time.Duration) error
 		Value:        val,
 		Expiration: ex,
 	}
+	store.Mu.Unlock()
 
 	return nil
 }
 
 func (store *ListStruct) Delete(key string) (interface{}, error) {
+
+	store.Mu.Lock()
 	val , exist := store.Data[key]
 	if !exist {
 		return nil, fmt.Errorf("data not found")
 	}
 
 	delete(store.Data, key)
+	store.Mu.Unlock()
 	return val, nil
 }
