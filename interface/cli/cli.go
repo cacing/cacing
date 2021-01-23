@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/needkopi/cacing/interface/socket"
-	"github.com/needkopi/cacing/utils"
+	"github.com/hadihammurabi/cacing/interface/socket"
+	"github.com/hadihammurabi/cacing/utils"
 
 	"github.com/urfave/cli/v2"
 )

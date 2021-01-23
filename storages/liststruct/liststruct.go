@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/needkopi/cacing/storages"
+	"github.com/hadihammurabi/cacing/storages"
 )
 
 // Data struct define structure of saved data
