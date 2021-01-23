@@ -1,4 +1,4 @@
-module cacing
+module github.com/needkopi/cacing
 
 go 1.15
 
