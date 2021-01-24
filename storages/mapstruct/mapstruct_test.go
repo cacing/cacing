@@ -37,3 +37,16 @@ func TestGetFromMapStruct(t *testing.T) {
 		assert.Equal(t, data, val)
 	}
 }
+
+func TestDeleteFromMapStruct(t *testing.T) {
+	storage := NewMapStruct(initialData)
+	storage.Set(key, val, 0)
+
+	deleted, err := storage.Delete(key)
+	if assert.Nil(t, err) {
+		assert.Equal(t, deleted, val)
+
+		_, err := storage.Get(key)
+		assert.NotNil(t, err)
+	}
+}
