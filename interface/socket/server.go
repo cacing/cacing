@@ -4,15 +4,21 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strings"
+
+	"github.com/hadihammurabi/cacing/storages"
+	"github.com/hadihammurabi/cacing/storages/mapstruct"
 )
 
 const (
 	connHost = "localhost"
 	connType = "tcp"
 )
+
+var store storages.Storage = mapstruct.NewMapStruct(map[string]mapstruct.Data{})
 
 // Config type
 type Config struct {
@@ -80,12 +86,32 @@ func handleConnection(conn net.Conn) {
 		user := strings.Split(clientMessage[1], " ")
 		err := authenticateClient(user[0], user[1])
 		if err != nil {
-			replySignal := fmt.Sprintf("error=>%s", err.Error())
+			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
 			conn.Write([]byte(replySignal))
 		} else {
 			fmt.Println("New connection")
-			replySignal := fmt.Sprintf("success=>connected")
+			replySignal := fmt.Sprintf("success=>connected\n")
 			conn.Write([]byte(replySignal))
+		}
+	} else if clientMessage[0] == "exec" {
+		user := strings.Split(clientMessage[1], " ")
+		err := authenticateClient(user[0], user[1])
+		if err != nil {
+			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
+			conn.Write([]byte(replySignal))
+		} else {
+			command := strings.Split(clientMessage[2], " ")
+			if command[0] == "SET" {
+				log.Printf("SET %s %s\n", command[1], command[2])
+				store.Set(command[1], command[2], 0)
+			} else if command[0] == "GET" {
+				val, err := store.Get(command[1])
+				log.Printf("GET %s, GOT %v\n", command[1], val)
+				if err != nil {
+					replySignal := fmt.Sprintf("success=>%v\n", val)
+					conn.Write([]byte(replySignal))
+				}
+			}
 		}
 	}
 
