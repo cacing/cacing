@@ -1,4 +1,4 @@
-module cacing
+module github.com/hadihammurabi/cacing
 
 go 1.15
 

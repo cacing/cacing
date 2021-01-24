@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cacing/interface/cli"
+	"github.com/hadihammurabi/cacing/interface/cli"
 	"log"
 	"os"
 )

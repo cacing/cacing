@@ -1,60 +1,109 @@
 package liststruct
 
 import (
-	"cacing/storages"
 	"fmt"
+	"sync"
+	"time"
+
+	"github.com/hadihammurabi/cacing/storages"
 )
 
 // Data struct define structure of saved data
 type Data struct {
-	Key string
-	Val interface{}
+	Value       interface{}
+	Expiration int64
 }
 
 // ListStruct is storage engine that store data into list of structs
 type ListStruct struct {
-	Data []*Data
+	Data map[string]Data
+	Mu sync.RWMutex
 }
 
 // NewListStruct generate new ListStruct
-func NewListStruct(initialData []*Data) storages.Storage {
+func NewListStruct(initialData map[string]Data) storages.Storage {
 	return &ListStruct{
 		Data: initialData,
 	}
 }
 
 // GetSize return how many datum in storage
-func (store ListStruct) GetSize() uint {
+func (store *ListStruct) GetSize() uint {
 	return uint(len(store.Data))
 }
 
 // Get return value with inserted key
 // if this key doesn't exists, return error
-func (store ListStruct) Get(key string) (interface{}, error) {
-	var val interface{}
-	found := false
-	for _, data := range store.Data {
-		if data.Key == key {
-			val = data.Val
-			found = true
-			break
+func (store *ListStruct) Get(key string) (value interface{},err error) {
+
+	store.Mu.RLock()
+	val, exist := store.Data[key]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	if val.Expiration > 0 {
+		if time.Now().UnixNano() > val.Expiration {
+			delete(store.Data, k)
+			return nil, fmt.Errorf("data not found")
 		}
 	}
+	store.Mu.RUnlock()
 
-	if !found {
-		return nil, fmt.Errorf("No data with key `%s` found", key)
-	}
+	return val.Value, nil
 
-	return val, nil
 }
 
 // Set to add data into storage
 // and return error if any problems happen
-func (store *ListStruct) Set(key string, val interface{}) error {
-	newData := &Data{
-		Key: key,
-		Val: val,
+func (store *ListStruct) Set(key string, val interface{}, t time.Duration) error {
+
+	store.Mu.Lock()
+	var ex int64
+	if t > 0 {
+		ex = time.Now().Add(t).UnixNano()
 	}
-	store.Data = append(store.Data, newData)
+
+	store.Data[key] = Data{
+		Value:        val,
+		Expiration: ex,
+	}
+	store.Mu.Unlock()
+
 	return nil
+}
+
+func (store *ListStruct) Delete(key string) (interface{}, error) {
+
+	store.Mu.Lock()
+	val , exist := store.Data[key]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	delete(store.Data, key)
+	store.Mu.Unlock()
+	return val, nil
+}
+
+func (store *ListStruct) Update(k string, v interface{}) (interface{}, error)  {
+
+	store.Mu.Lock()
+	val , exist := store.Data[k]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	if val.Expiration > 0 {
+		if time.Now().UnixNano() > val.Expiration {
+			delete(store.Data, k)
+			return nil, fmt.Errorf("data not found")
+		}
+	}
+
+	val.Value = v
+	store.Data[k] = val
+	store.Mu.Unlock()
+
+	return val, nil
 }
