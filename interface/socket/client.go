@@ -3,11 +3,22 @@ package socket
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"net/url"
 	"os"
+	"strings"
+
+	"github.com/c-bata/go-prompt"
 )
+
+func clientCompleter(d prompt.Document) []prompt.Suggest {
+	s := []prompt.Suggest{
+		{Text: "SET", Description: "Set value of a key"},
+		{Text: "GET", Description: "Get value from a key"},
+		{Text: "DEL", Description: "Delete key and value"},
+	}
+	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
+}
 
 // ConnectTo func
 func ConnectTo(url *url.URL) error {
@@ -28,18 +39,24 @@ func ConnectTo(url *url.URL) error {
 
 	for {
 		rawMessage, _ := bufio.NewReader(conn).ReadString('\n')
-		// message := strings.Split(rawMessage, "=>")
-		log.Println(rawMessage)
+		message := strings.Split(rawMessage, "=>")
 
-		// if message[0] == "success" {
-		// 	log.Println("> ", message)
-		// } else if message[0] == "error" {
-		// 	log.Println("Error > ", message)
-		// }
+		if message[0] == "success" {
+			fmt.Println(message[1])
+		} else if message[0] == "error" {
+			panic(message[1])
+		}
+
+		input := prompt.Input(">>> ", clientCompleter)
+		if input == "EXIT" {
+			os.Exit(0)
+		}
+
+		signal := fmt.Sprintf("exec=>%s %s=>%s\n", url.User.Username(), password, input)
+		conn.Write([]byte(signal))
 
 		// fmt.Print("Text to send: ")
 		// input, _ := reader.ReadString('\n')
-		// conn.Write([]byte(input))
 	}
 
 }

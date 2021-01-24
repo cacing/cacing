@@ -89,7 +89,7 @@ func handleConnection(conn net.Conn) {
 			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
 			conn.Write([]byte(replySignal))
 		} else {
-			fmt.Println("New connection")
+			fmt.Println("New client connected.")
 			replySignal := fmt.Sprintf("success=>connected\n")
 			conn.Write([]byte(replySignal))
 		}
@@ -104,10 +104,12 @@ func handleConnection(conn net.Conn) {
 			if command[0] == "SET" {
 				log.Printf("SET %s %s\n", command[1], command[2])
 				store.Set(command[1], command[2], 0)
+				conn.Write([]byte("\n"))
 			} else if command[0] == "GET" {
 				val, err := store.Get(command[1])
-				log.Printf("GET %s, GOT %v\n", command[1], val)
 				if err != nil {
+					log.Println(err)
+				} else {
 					replySignal := fmt.Sprintf("success=>%v\n", val)
 					conn.Write([]byte(replySignal))
 				}
