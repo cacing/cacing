@@ -23,12 +23,14 @@ func NewCliApp(args []string) error {
 						Usage: "Cacing server's host",
 					},
 					&cli.StringFlag{
-						Name:  "username",
-						Usage: "Username to access the storage server",
+						Name:     "username",
+						Required: true,
+						Usage:    "Username to access the storage server",
 					},
 					&cli.StringFlag{
-						Name:  "password",
-						Usage: "Secret password for username",
+						Name:     "password",
+						Required: true,
+						Usage:    "Secret password for username",
 					},
 				},
 				Action: func(ctx *cli.Context) error {

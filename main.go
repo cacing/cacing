@@ -1,14 +1,16 @@
 package main
 
 import (
-	"github.com/hadihammurabi/cacing/interface/cli"
-	"log"
+	"fmt"
 	"os"
+
+	"github.com/hadihammurabi/cacing/interface/cli"
 )
 
 func main() {
 	err := cli.NewCliApp(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
