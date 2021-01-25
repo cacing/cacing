@@ -92,13 +92,14 @@ func handleConnection(conn net.Conn) {
 		replySignal := fmt.Sprintf("success=>connected\n")
 		conn.Write([]byte(replySignal))
 	} else if command.Type == socket.SignalExec {
-		exec := strings.Split(command.Payload, " ")
-		if exec[0] == "SET" {
-			log.Printf("SET %s %s\n", exec[1], exec[2])
-			store.Set(exec[1], exec[2], 0)
+		exec := socket.NewExecFromCommandPayload(command.Payload)
+		switch exec.Type {
+		case socket.ExecSet:
+			log.Printf("SET %s %s\n", exec.Args[0], exec.Args[1])
+			store.Set(exec.Args[0], exec.Args[1], 0)
 			conn.Write([]byte("\n"))
-		} else if exec[0] == "GET" {
-			val, err := store.Get(exec[1])
+		case socket.ExecGet:
+			val, err := store.Get(exec.Args[0])
 			if err != nil {
 				log.Println(err)
 			} else {
