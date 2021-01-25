@@ -49,7 +49,7 @@ func ConnectTo(url *url.URL) error {
 		}
 
 		input := prompt.Input(">>> ", clientCompleter)
-		if input == "EXIT" {
+		if strings.ToLower(input) == "exit" || strings.ToLower(input) == "quit" {
 			os.Exit(0)
 		}
 
