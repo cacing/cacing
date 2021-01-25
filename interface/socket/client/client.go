@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -45,7 +46,7 @@ func ConnectTo(url *url.URL) error {
 		if message[0] == "success" {
 			fmt.Println(message[1])
 		} else if message[0] == "error" {
-			panic(message[1])
+			log.Fatalln(message[1])
 		}
 
 		input := prompt.Input(">>> ", clientCompleter)

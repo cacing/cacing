@@ -64,11 +64,11 @@ func RunServer(config *Config) error {
 			return nil
 		}
 
-		go handleConnection(c)
+		go handleConnection(config, c)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(config *Config, conn net.Conn) {
 	buffer, err := bufio.NewReader(conn).ReadBytes('\n')
 
 	if err != nil {
@@ -81,7 +81,7 @@ func handleConnection(conn net.Conn) {
 	command := socket.NewCommandFromMessage(clientMessage)
 
 	user := strings.Split(command.User, " ")
-	err = authenticateClient(user[0], user[1])
+	err = authenticateClient(config, user[0], user[1])
 	if err != nil {
 		replySignal := fmt.Sprintf("error=>%s\n", err.Error())
 		conn.Write([]byte(replySignal))
@@ -109,9 +109,14 @@ func handleConnection(conn net.Conn) {
 		}
 	}
 
-	handleConnection(conn)
+	handleConnection(config, conn)
 }
 
-func authenticateClient(username string, password string) error {
-	return nil
+func authenticateClient(config *Config, username string, password string) error {
+	fmt.Println(config)
+	if username == config.Username && password == config.Password {
+		return nil
+	}
+
+	return errors.New("invalid username or password")
 }
