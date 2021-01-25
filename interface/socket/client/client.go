@@ -1,4 +1,4 @@
-package socket
+package client
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
+	"github.com/hadihammurabi/cacing/interface/socket"
 )
 
 func clientCompleter(d prompt.Document) []prompt.Suggest {
@@ -22,7 +23,7 @@ func clientCompleter(d prompt.Document) []prompt.Suggest {
 
 // ConnectTo func
 func ConnectTo(url *url.URL) error {
-	conn, err := net.Dial(connType, connHost+":"+url.Port())
+	conn, err := net.Dial(socket.ConnType, socket.ConnHost+":"+url.Port())
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)

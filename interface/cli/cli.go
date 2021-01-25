@@ -1,7 +1,8 @@
 package cli
 
 import (
-	"github.com/hadihammurabi/cacing/interface/socket"
+	"github.com/hadihammurabi/cacing/interface/socket/client"
+	"github.com/hadihammurabi/cacing/interface/socket/server"
 	"github.com/hadihammurabi/cacing/utils"
 
 	"github.com/urfave/cli/v2"
@@ -31,12 +32,12 @@ func NewCliApp(args []string) error {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					config := &socket.Config{
+					config := &server.Config{
 						Port:     ctx.String("port"),
 						Username: ctx.String("username"),
 						Password: ctx.String("password"),
 					}
-					return socket.RunServer(config)
+					return server.RunServer(config)
 				},
 			},
 			{
@@ -53,7 +54,7 @@ func NewCliApp(args []string) error {
 					if err != nil {
 						return err
 					}
-					return socket.ConnectTo(url)
+					return client.ConnectTo(url)
 				},
 			},
 		},

@@ -1,4 +1,4 @@
-package socket
+package server
 
 import (
 	"bufio"
@@ -9,13 +9,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hadihammurabi/cacing/interface/socket"
 	"github.com/hadihammurabi/cacing/storages"
 	"github.com/hadihammurabi/cacing/storages/mapstruct"
-)
-
-const (
-	connHost = "localhost"
-	connType = "tcp"
 )
 
 var store storages.Storage = mapstruct.NewMapStruct(map[string]mapstruct.Data{})
@@ -53,10 +49,10 @@ func NewConfig(port string, username string, password string) (*Config, error) {
 
 // RunServer func
 func RunServer(config *Config) error {
-	fmt.Println("Starting cacing server on " + connHost + ":" + config.Port)
-	l, err := net.Listen(connType, connHost+":"+config.Port)
+	log.Println("Starting cacing server on " + socket.ConnHost + ":" + config.Port)
+	l, err := net.Listen(socket.ConnType, socket.ConnHost+":"+config.Port)
 	if err != nil {
-		fmt.Println("Error listening:", err.Error())
+		log.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
@@ -64,7 +60,7 @@ func RunServer(config *Config) error {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			log.Println("Error:", err.Error())
 			return nil
 		}
 
@@ -76,7 +72,7 @@ func handleConnection(conn net.Conn) {
 	buffer, err := bufio.NewReader(conn).ReadBytes('\n')
 
 	if err != nil {
-		fmt.Println("Client left.")
+		log.Println("Client left.")
 		conn.Close()
 		return
 	}
@@ -89,7 +85,7 @@ func handleConnection(conn net.Conn) {
 			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
 			conn.Write([]byte(replySignal))
 		} else {
-			fmt.Println("New client connected.")
+			log.Println("New client connected.")
 			replySignal := fmt.Sprintf("success=>connected\n")
 			conn.Write([]byte(replySignal))
 		}
