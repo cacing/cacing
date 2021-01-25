@@ -79,37 +79,31 @@ func handleConnection(conn net.Conn) {
 
 	clientMessage := string(buffer[:len(buffer)-1])
 	command := socket.NewCommandFromMessage(clientMessage)
+
+	user := strings.Split(command.User, " ")
+	err = authenticateClient(user[0], user[1])
+	if err != nil {
+		replySignal := fmt.Sprintf("error=>%s\n", err.Error())
+		conn.Write([]byte(replySignal))
+	}
+
 	if command.Type == socket.SignalConnect {
-		user := strings.Split(command.User, " ")
-		err := authenticateClient(user[0], user[1])
-		if err != nil {
-			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
-			conn.Write([]byte(replySignal))
-		} else {
-			log.Println("New client connected.")
-			replySignal := fmt.Sprintf("success=>connected\n")
-			conn.Write([]byte(replySignal))
-		}
+		log.Println("New client connected.")
+		replySignal := fmt.Sprintf("success=>connected\n")
+		conn.Write([]byte(replySignal))
 	} else if command.Type == socket.SignalExec {
-		user := strings.Split(command.User, " ")
-		err := authenticateClient(user[0], user[1])
-		if err != nil {
-			replySignal := fmt.Sprintf("error=>%s\n", err.Error())
-			conn.Write([]byte(replySignal))
-		} else {
-			exec := strings.Split(command.Payload, " ")
-			if exec[0] == "SET" {
-				log.Printf("SET %s %s\n", exec[1], exec[2])
-				store.Set(exec[1], exec[2], 0)
-				conn.Write([]byte("\n"))
-			} else if exec[0] == "GET" {
-				val, err := store.Get(exec[1])
-				if err != nil {
-					log.Println(err)
-				} else {
-					replySignal := fmt.Sprintf("success=>%v\n", val)
-					conn.Write([]byte(replySignal))
-				}
+		exec := strings.Split(command.Payload, " ")
+		if exec[0] == "SET" {
+			log.Printf("SET %s %s\n", exec[1], exec[2])
+			store.Set(exec[1], exec[2], 0)
+			conn.Write([]byte("\n"))
+		} else if exec[0] == "GET" {
+			val, err := store.Get(exec[1])
+			if err != nil {
+				log.Println(err)
+			} else {
+				replySignal := fmt.Sprintf("success=>%v\n", val)
+				conn.Write([]byte(replySignal))
 			}
 		}
 	}
