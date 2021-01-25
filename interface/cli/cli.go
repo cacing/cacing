@@ -19,8 +19,9 @@ func NewCliApp(args []string) error {
 				Usage: "Start cacing server",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "port",
-						Usage: "Cacing server's host",
+						Name:        "port",
+						DefaultText: "6543",
+						Usage:       "Cacing server's host",
 					},
 					&cli.StringFlag{
 						Name:     "username",
@@ -34,8 +35,12 @@ func NewCliApp(args []string) error {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
+					port := "6543"
+					if ctx.String("port") != "" {
+						port = ctx.String("port")
+					}
 					config := &server.Config{
-						Port:     ctx.String("port"),
+						Port:     port,
 						Username: ctx.String("username"),
 						Password: ctx.String("password"),
 					}
