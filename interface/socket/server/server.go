@@ -83,9 +83,31 @@ func handleConnection(config *Config, conn net.Conn) {
 	clientMessage := string(buffer[:len(buffer)-1])
 	command := socket.NewCommandFromMessage(clientMessage)
 
+	resolveCommand(config, conn, command)
+	handleConnection(config, conn)
+}
+
+func authenticateClient(config *Config, username string, password string) error {
+	if username == config.Username && password == config.Password {
+		return nil
+	}
+
+	return errors.New("invalid username or password")
+}
+
+func clientExists(id string) error {
+	exists, _ := clientPool.IsExists(id)
+	if exists {
+		return nil
+	}
+
+	return errors.New("invalid client id")
+}
+
+func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 	if command.Type == socket.SignalConnect {
 		user := strings.Split(command.User, " ")
-		err = authenticateClient(config, user[0], user[1])
+		err := authenticateClient(config, user[0], user[1])
 		if err != nil {
 			replySignal := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalError,
@@ -135,23 +157,4 @@ func handleConnection(config *Config, conn net.Conn) {
 			}
 		}
 	}
-
-	handleConnection(config, conn)
-}
-
-func authenticateClient(config *Config, username string, password string) error {
-	if username == config.Username && password == config.Password {
-		return nil
-	}
-
-	return errors.New("invalid username or password")
-}
-
-func clientExists(id string) error {
-	exists, _ := clientPool.IsExists(id)
-	if exists {
-		return nil
-	}
-
-	return errors.New("invalid client id")
 }
