@@ -16,3 +16,18 @@ const (
 	SignalSuccess        = "SIGNAL_SUCCESS"
 	SignalError          = "SIGNAL_ERROR"
 )
+
+// ExecType type of execution command
+type ExecType string
+
+// const for execution types
+const (
+	ExecSet ExecType = "EXEC_SET"
+	ExecGet          = "EXEC_GET"
+	ExecDel          = "EXEC_DEL"
+)
+
+// const for command header
+const (
+	CommandHeaderExecType ExecType = "EXEC_TYPE"
+)

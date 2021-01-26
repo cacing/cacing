@@ -11,6 +11,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hadihammurabi/cacing/interface/socket"
+	uuid "github.com/satori/go.uuid"
 )
 
 func clientCompleter(d prompt.Document) []prompt.Suggest {
@@ -31,22 +32,33 @@ func ConnectTo(url *url.URL) error {
 	}
 
 	password, _ := url.User.Password()
-	connectSignal := fmt.Sprintf("connect=>%s %s\n", url.User.Username(), password)
-	_, err = conn.Write([]byte(connectSignal))
+	connectCommand := socket.CommandToMessage(&socket.Command{
+		Type: socket.SignalConnect,
+		User: fmt.Sprintf("%s %s", url.User.Username(), password),
+	})
+	_, err = conn.Write([]byte(connectCommand))
 	if err != nil {
 		return err
 	}
 
 	// reader := bufio.NewReader(os.Stdin)
 
+	var id uuid.UUID
+
 	for {
 		rawMessage, _ := bufio.NewReader(conn).ReadString('\n')
-		message := strings.Split(rawMessage, "=>")
+		commandFromServer := socket.NewCommandFromMessage(rawMessage)
 
-		if message[0] == "success" {
-			fmt.Println(message[1])
-		} else if message[0] == "error" {
-			log.Fatalln(message[1])
+		switch commandFromServer.Type {
+		case socket.SignalSuccess:
+			if commandFromServer.Payload == "login" {
+				id = uuid.FromStringOrNil(commandFromServer.User)
+			} else if commandFromServer.Payload == string(socket.ExecSet) {
+			} else {
+				fmt.Println(commandFromServer.Payload)
+			}
+		case socket.SignalError:
+			log.Fatalln(commandFromServer.Payload)
 		}
 
 		input := prompt.Input(">>> ", clientCompleter)
@@ -54,7 +66,11 @@ func ConnectTo(url *url.URL) error {
 			os.Exit(0)
 		}
 
-		signal := fmt.Sprintf("exec=>%s %s=>%s\n", url.User.Username(), password, input)
+		signal := socket.CommandToMessage(&socket.Command{
+			Type:    socket.SignalExec,
+			User:    id.String(),
+			Payload: input,
+		})
 		conn.Write([]byte(signal))
 
 		// fmt.Print("Text to send: ")

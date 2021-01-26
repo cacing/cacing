@@ -1,18 +1,7 @@
 package socket
 
 import (
-	"fmt"
 	"strings"
-)
-
-// ExecType type of execution command
-type ExecType string
-
-// const for execution types
-const (
-	ExecSet ExecType = "EXEC_SET"
-	ExecGet          = "EXEC_GET"
-	ExecDel          = "EXEC_DEL"
 )
 
 // Exec define execution model
@@ -39,8 +28,6 @@ func NewExecFromCommandPayload(payload string) *Exec {
 	if len(payloadSplitted) > 1 {
 		args = payloadSplitted[1:]
 	}
-
-	fmt.Println(len(payloadSplitted))
 
 	return &Exec{
 		execType,
