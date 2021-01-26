@@ -10,7 +10,7 @@ type Command struct {
 	Type    Signal
 	User    string
 	Payload string
-	// Header  *CommandHeader
+	Headers []*CommandHeader
 }
 
 // NewCommandFromMessage create command from message string
@@ -26,21 +26,21 @@ func NewCommandFromMessage(message string) *Command {
 		payload = messageSplitted[2]
 	}
 
-	// header := nil
-	// if len(messageSplitted) > 3 {
-	// 	header = NewCommandHeaderFromMessage(messageSplitted[3])
-	// }
+	headers := make([]*CommandHeader, 0)
+	if len(messageSplitted) > 3 {
+		headers = NewCommandHeadersFromMessage(messageSplitted[3])
+	}
 
 	return &Command{
 		signalType,
 		user,
 		payload,
-		// header,
+		headers,
 	}
 }
 
 // CommandToMessage generate message string from given command
 func CommandToMessage(command *Command) string {
-	message := fmt.Sprintf("%s=>%s=>%s\n", command.Type, command.User, command.Payload)
+	message := fmt.Sprintf("%s=>%s=>%s=>%s\n", command.Type, command.User, command.Payload, CommandHeadersToMessage(command.Headers))
 	return message
 }
