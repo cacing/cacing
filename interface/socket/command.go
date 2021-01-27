@@ -10,7 +10,7 @@ type Command struct {
 	Type    Signal
 	User    string
 	Payload string
-	Headers []*CommandHeader
+	Headers CommandHeader
 }
 
 // NewCommandFromMessage create command from message string
@@ -26,7 +26,7 @@ func NewCommandFromMessage(message string) *Command {
 		payload = messageSplitted[2]
 	}
 
-	headers := make([]*CommandHeader, 0)
+	headers := CommandHeader{}
 	if len(messageSplitted) > 3 {
 		headers = NewCommandHeadersFromMessage(messageSplitted[3])
 	}

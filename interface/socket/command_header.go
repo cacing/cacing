@@ -5,42 +5,31 @@ import (
 	"strings"
 )
 
-// CommandHeader structure of command header
-type CommandHeader struct {
-	ExecType ExecType
-}
+// CommandHeader type
+type CommandHeader map[string]interface{}
 
 // NewCommandHeadersFromMessage create command header from given message
 // the message should: EXEC_TYPE:<ExecType>
-func NewCommandHeadersFromMessage(message string) []*CommandHeader {
+func NewCommandHeadersFromMessage(message string) CommandHeader {
+	headers := map[string]interface{}{}
 	messageSplitted := strings.Split(message, " ")
 
-	headers := make([]*CommandHeader, 0)
 	for _, headerString := range messageSplitted {
 		headerStringSplitted := strings.Split(headerString, ":")
-		header := &CommandHeader{}
-		if headerStringSplitted[0] == string(CommandHeaderExecType) {
-			switch headerStringSplitted[1] {
-			case string(ExecSet):
-				header.ExecType = ExecSet
-			}
+		if len(headerStringSplitted) > 1 {
+			headers[headerStringSplitted[0]] = headerStringSplitted[1]
 		}
-
-		headers = append(headers, header)
 	}
 
 	return headers
 }
 
 // CommandHeadersToMessage returns message built from given headers
-func CommandHeadersToMessage(headers []*CommandHeader) string {
+func CommandHeadersToMessage(headers CommandHeader) string {
 	messages := ""
 
-	for _, header := range headers {
-		if string(header.ExecType) != "" {
-			headerString := fmt.Sprintf("%s:%s", CommandHeaderExecType, header.ExecType)
-			messages = fmt.Sprintf("%s %s", messages, headerString)
-		}
+	for key, val := range headers {
+		messages = fmt.Sprintf("%s:%s %s", key, val, messages)
 	}
 
 	return messages

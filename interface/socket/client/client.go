@@ -53,10 +53,12 @@ func ConnectTo(url *url.URL) error {
 		case socket.SignalSuccess:
 			if commandFromServer.Payload == "login" {
 				id = uuid.FromStringOrNil(commandFromServer.User)
+				fmt.Println("Connected with id:", id)
 			} else if commandFromServer.Payload == string(socket.ExecSet) {
 			} else {
 				fmt.Println(commandFromServer.Payload)
 			}
+			fmt.Printf("%s\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
 			log.Fatalln(commandFromServer.Payload)
 		}
