@@ -3,7 +3,6 @@ package client
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"net/url"
 	"os"
@@ -60,7 +59,7 @@ func ConnectTo(url *url.URL) error {
 			}
 			fmt.Printf("%s\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
-			log.Fatalln(commandFromServer.Payload)
+			fmt.Printf("<< %s >>\n\n", commandFromServer.Payload)
 		}
 
 		input := prompt.Input(">>> ", clientCompleter)

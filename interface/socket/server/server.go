@@ -163,10 +163,18 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			conn.Write([]byte(replySignal))
 		case socket.ExecGet:
 			val, err := store.Get(exec.Args[0])
+			finish := time.Since(start)
 			if err != nil {
-				log.Println(err)
+				replySignal := socket.CommandToMessage(&socket.Command{
+					Type:    socket.SignalError,
+					User:    command.User,
+					Payload: fmt.Sprintf("%s", err.Error()),
+					Headers: socket.CommandHeader{
+						"TIME": finish,
+					},
+				})
+				conn.Write([]byte(replySignal))
 			} else {
-				finish := time.Since(start)
 				replySignal := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
