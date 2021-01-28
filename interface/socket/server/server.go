@@ -81,8 +81,15 @@ func handleConnection(config *Config, conn net.Conn) {
 		return
 	}
 
-	clientMessage := string(buffer[:len(buffer)-1])
-	command := socket.NewCommandFromMessage(clientMessage)
+	clientMessage := buffer[:len(buffer)-1]
+	command, err := socket.NewCommandFromMessage(clientMessage)
+	if err != nil {
+		replySignal, _ := socket.CommandToMessage(&socket.Command{
+			Type:    socket.SignalError,
+			Payload: fmt.Sprintf("%s", err.Error()),
+		})
+		conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+	}
 
 	resolveCommand(config, conn, command)
 	handleConnection(config, conn)
@@ -112,39 +119,39 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 		err := authenticateClient(config, user[0], user[1])
 		if err != nil {
 			finish := time.Since(start)
-			replySignal := socket.CommandToMessage(&socket.Command{
+			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalError,
 				Payload: fmt.Sprintf("%s", err.Error()),
 				Headers: socket.CommandHeader{
-					"TIME": finish,
+					"TIME": finish.String(),
 				},
 			})
-			conn.Write([]byte(replySignal))
+			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 		}
 		newClientID, _ := clientPool.Add()
 		finish := time.Since(start)
-		replySignal := socket.CommandToMessage(&socket.Command{
+		replySignal, _ := socket.CommandToMessage(&socket.Command{
 			Type:    socket.SignalSuccess,
 			User:    newClientID.String(),
 			Payload: "login",
 			Headers: socket.CommandHeader{
-				"TIME": finish,
+				"TIME": finish.String(),
 			},
 		})
-		conn.Write([]byte(replySignal))
+		conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 		log.Println("New client connected.")
 	} else if command.Type == socket.SignalExec {
 		err := clientExists(command.User)
 		if err != nil {
 			finish := time.Since(start)
-			replySignal := socket.CommandToMessage(&socket.Command{
+			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalError,
 				Payload: fmt.Sprintf("%s", err.Error()),
 				Headers: socket.CommandHeader{
-					"TIME": finish,
+					"TIME": finish.String(),
 				},
 			})
-			conn.Write([]byte(replySignal))
+			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 		}
 		exec := socket.NewExecFromCommandPayload(command.Payload)
 		switch exec.Type {
@@ -152,62 +159,62 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			log.Printf("SET %s %s\n", exec.Args[0], exec.Args[1])
 			store.Set(exec.Args[0], exec.Args[1], 0)
 			finish := time.Since(start)
-			replySignal := socket.CommandToMessage(&socket.Command{
+			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalSuccess,
 				User:    command.User,
 				Payload: string(socket.ExecSet),
 				Headers: socket.CommandHeader{
-					"TIME": finish,
+					"TIME": finish.String(),
 				},
 			})
-			conn.Write([]byte(replySignal))
+			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 		case socket.ExecGet:
 			val, err := store.Get(exec.Args[0])
 			finish := time.Since(start)
 			if err != nil {
-				replySignal := socket.CommandToMessage(&socket.Command{
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
 					Payload: fmt.Sprintf("%s", err.Error()),
 					Headers: socket.CommandHeader{
-						"TIME": finish,
+						"TIME": finish.String(),
 					},
 				})
-				conn.Write([]byte(replySignal))
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			} else {
-				replySignal := socket.CommandToMessage(&socket.Command{
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
 					Payload: fmt.Sprintf("%v", val),
 					Headers: socket.CommandHeader{
-						"TIME": finish,
+						"TIME": finish.String(),
 					},
 				})
-				conn.Write([]byte(replySignal))
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			}
 		case socket.ExecDel:
 			val, err := store.Delete(exec.Args[0])
 			finish := time.Since(start)
 			if err != nil {
-				replySignal := socket.CommandToMessage(&socket.Command{
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
 					Payload: fmt.Sprintf("%s", err.Error()),
 					Headers: socket.CommandHeader{
-						"TIME": finish,
+						"TIME": finish.String(),
 					},
 				})
-				conn.Write([]byte(replySignal))
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			} else {
-				replySignal := socket.CommandToMessage(&socket.Command{
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
 					Payload: fmt.Sprintf("%v", val),
 					Headers: socket.CommandHeader{
-						"TIME": finish,
+						"TIME": finish.String(),
 					},
 				})
-				conn.Write([]byte(replySignal))
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			}
 		case socket.ExecExists:
 			exists := store.Exists(exec.Args[0])
@@ -216,15 +223,15 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				result = 1
 			}
 			finish := time.Since(start)
-			replySignal := socket.CommandToMessage(&socket.Command{
+			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalSuccess,
 				User:    command.User,
 				Payload: fmt.Sprint(result),
 				Headers: socket.CommandHeader{
-					"TIME": finish,
+					"TIME": finish.String(),
 				},
 			})
-			conn.Write([]byte(replySignal))
+			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 		}
 	}
 }

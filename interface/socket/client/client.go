@@ -32,11 +32,11 @@ func ConnectTo(url *url.URL) error {
 	}
 
 	password, _ := url.User.Password()
-	connectCommand := socket.CommandToMessage(&socket.Command{
+	connectCommand, _ := socket.CommandToMessage(&socket.Command{
 		Type: socket.SignalConnect,
 		User: fmt.Sprintf("%s %s", url.User.Username(), password),
 	})
-	_, err = conn.Write([]byte(connectCommand))
+	_, err = conn.Write([]byte(fmt.Sprintf("%s\n", connectCommand)))
 	if err != nil {
 		return err
 	}
@@ -46,8 +46,8 @@ func ConnectTo(url *url.URL) error {
 	var id uuid.UUID
 
 	for {
-		rawMessage, _ := bufio.NewReader(conn).ReadString('\n')
-		commandFromServer := socket.NewCommandFromMessage(rawMessage)
+		rawMessage, _ := bufio.NewReader(conn).ReadBytes('\n')
+		commandFromServer, _ := socket.NewCommandFromMessage(rawMessage)
 
 		switch commandFromServer.Type {
 		case socket.SignalSuccess:
@@ -58,7 +58,7 @@ func ConnectTo(url *url.URL) error {
 			} else {
 				fmt.Println(commandFromServer.Payload)
 			}
-			fmt.Printf("%s\n\n", commandFromServer.Headers["TIME"])
+			fmt.Printf("%v\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
 			fmt.Printf("<< %s >>\n\n", commandFromServer.Payload)
 		}
@@ -68,12 +68,12 @@ func ConnectTo(url *url.URL) error {
 			os.Exit(0)
 		}
 
-		signal := socket.CommandToMessage(&socket.Command{
+		signal, _ := socket.CommandToMessage(&socket.Command{
 			Type:    socket.SignalExec,
 			User:    id.String(),
 			Payload: input,
 		})
-		conn.Write([]byte(signal))
+		conn.Write([]byte(fmt.Sprintf("%s\n", signal)))
 
 		// fmt.Print("Text to send: ")
 		// input, _ := reader.ReadString('\n')
