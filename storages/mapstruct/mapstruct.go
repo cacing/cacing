@@ -97,14 +97,15 @@ func (store *MapStruct) Set(key string, val interface{}, t time.Duration) error 
 // Delete return deleted value
 // or error if any problems happen
 func (store *MapStruct) Delete(key string) (interface{}, error) {
-
-	store.Mu.Lock()
-	data, exist := store.Data[key]
-	if !exist {
+	// check data existence
+	data, err := store.Get(key)
+	if err != nil {
 		return nil, fmt.Errorf("data not found")
 	}
 
+	store.Mu.Lock()
+	defer store.Mu.Unlock()
+
 	delete(store.Data, key)
-	store.Mu.Unlock()
-	return data.Value, nil
+	return data, nil
 }
