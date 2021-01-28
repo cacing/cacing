@@ -10,6 +10,7 @@ Cacing is a simple in memory cache engine.
 
 # Features
 * Intuitive API
+* Key-value store
 * Single executable for server and client
 * Pluggable storage engine
 * Single server instance for single application client
