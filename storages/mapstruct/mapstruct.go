@@ -29,6 +29,8 @@ func NewMapStruct(initialData map[string]Data) storages.Storage {
 
 // GetSize return how many datum in storage
 func (store *MapStruct) GetSize() uint {
+	store.Mu.RLock()
+	defer store.Mu.RUnlock()
 	return uint(len(store.Data))
 }
 
@@ -58,27 +60,19 @@ func (store *MapStruct) Exists(key string) bool {
 // Get return value with inserted key
 // if this key doesn't exists, return error
 func (store *MapStruct) Get(key string) (value interface{}, err error) {
-
 	store.Mu.RLock()
+	defer store.Mu.RUnlock()
 
-	// check data expiration
-	data, exist := store.Data[key]
-	if exist && data.Expiration > 0 {
-		if time.Now().UnixNano() > data.Expiration {
-			delete(store.Data, key)
-		}
-	}
-
-	// get data after cleaned
-	data, exist = store.Data[key]
+	// check data existence
+	exist := store.Exists(key)
 	if !exist {
 		return nil, fmt.Errorf("data not found")
 	}
 
-	store.Mu.RUnlock()
+	// get data after cleaned
+	data := store.Data[key]
 
 	return data.Value, nil
-
 }
 
 // Set to add data into storage
