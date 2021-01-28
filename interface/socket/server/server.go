@@ -185,6 +185,22 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				})
 				conn.Write([]byte(replySignal))
 			}
+		case socket.ExecExists:
+			exists := store.Exists(exec.Args[0])
+			result := 0
+			if exists {
+				result = 1
+			}
+			finish := time.Since(start)
+			replySignal := socket.CommandToMessage(&socket.Command{
+				Type:    socket.SignalSuccess,
+				User:    command.User,
+				Payload: fmt.Sprint(result),
+				Headers: socket.CommandHeader{
+					"TIME": finish,
+				},
+			})
+			conn.Write([]byte(replySignal))
 		}
 	}
 }

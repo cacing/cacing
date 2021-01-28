@@ -32,6 +32,29 @@ func (store *MapStruct) GetSize() uint {
 	return uint(len(store.Data))
 }
 
+// Exists return true if data exists
+// or false if doesn't
+func (store *MapStruct) Exists(key string) bool {
+	store.Mu.RLock()
+	defer store.Mu.RUnlock()
+
+	// check data expiration
+	data, exist := store.Data[key]
+	if exist && data.Expiration > 0 {
+		if time.Now().UnixNano() > data.Expiration {
+			delete(store.Data, key)
+		}
+	}
+
+	// get data after cleaned
+	data, exist = store.Data[key]
+	if exist {
+		return true
+	}
+
+	return false
+}
+
 // Get return value with inserted key
 // if this key doesn't exists, return error
 func (store *MapStruct) Get(key string) (value interface{}, err error) {

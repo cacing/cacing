@@ -22,9 +22,10 @@ type ExecType string
 
 // const for execution types
 const (
-	ExecSet ExecType = "EXEC_SET"
-	ExecGet          = "EXEC_GET"
-	ExecDel          = "EXEC_DEL"
+	ExecSet    ExecType = "EXEC_SET"
+	ExecGet             = "EXEC_GET"
+	ExecDel             = "EXEC_DEL"
+	ExecExists          = "EXEC_EXISTS"
 )
 
 // const for command header

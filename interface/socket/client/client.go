@@ -18,6 +18,7 @@ func clientCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: "SET", Description: "Set value of a key"},
 		{Text: "GET", Description: "Get value from a key"},
 		{Text: "DEL", Description: "Delete key and value"},
+		{Text: "EXISTS", Description: "Check value is exists or not"},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
