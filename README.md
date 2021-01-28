@@ -24,3 +24,37 @@ Connect to server (as client) by run:
 ```bash
 $ cacing connect --dsn cacing://root:123@localhost:8081
 ```
+
+## Available Command
+* **SET** a key with value.
+
+  example:
+  ```
+  SET user1 cacing
+  SET user2 hadihammurabi
+  SET user3 needkopi
+  ```
+* **GET** value of a key
+
+  example:
+  ```
+  GET user1
+  GET user2
+  GET user3
+  ```
+* **DEL** to delete a key
+
+  example:
+  ```
+  DEL user1
+  DEL user2
+  DEL user3
+  ```
+* **EXISTS** to check key existence
+
+  example:
+  ```
+  EXISTS user1
+  EXISTS user2
+  EXISTS user3
+  ```
