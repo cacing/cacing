@@ -6,7 +6,7 @@
 3. [How to Use](#how-to-use)
 
 # Introduction
-Cacing is quite simple in memory cache engine.
+Cacing is a simple in memory cache engine.
 
 # Features
 * Intuitive API
