@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"net/url"
@@ -47,6 +48,10 @@ func ConnectTo(url *url.URL) error {
 
 	for {
 		rawMessage, _ := bufio.NewReader(conn).ReadBytes('\n')
+		if bytes.Equal(rawMessage, []byte("")) {
+			fmt.Println("<< connection lost >>")
+			os.Exit(1)
+		}
 		commandFromServer, _ := socket.NewCommandFromMessage(rawMessage)
 
 		switch commandFromServer.Type {
