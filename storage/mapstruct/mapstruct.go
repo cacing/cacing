@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hadihammurabi/cacing/storage"
+	"github.com/cacing/cacing/storage"
 )
 
 // Data struct define structure of saved data

@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/hadihammurabi/cacing/interface/socket/client"
-	"github.com/hadihammurabi/cacing/interface/socket/server"
-	"github.com/hadihammurabi/cacing/util"
+	"github.com/cacing/cacing/interface/socket/client"
+	"github.com/cacing/cacing/interface/socket/server"
+	"github.com/cacing/cacing/util"
 
 	"github.com/urfave/cli/v2"
 )

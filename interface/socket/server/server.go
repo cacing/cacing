@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hadihammurabi/cacing/interface/socket/client"
+	"github.com/cacing/cacing/interface/socket/client"
 
-	"github.com/hadihammurabi/cacing/interface/socket"
-	"github.com/hadihammurabi/cacing/storage"
-	"github.com/hadihammurabi/cacing/storage/mapstruct"
+	"github.com/cacing/cacing/interface/socket"
+	"github.com/cacing/cacing/storage"
+	"github.com/cacing/cacing/storage/mapstruct"
 )
 
 var store storage.Storage = mapstruct.NewMapStruct(map[string]mapstruct.Data{})

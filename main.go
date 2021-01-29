@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hadihammurabi/cacing/interface/cli"
+	"github.com/cacing/cacing/interface/cli"
 )
 
 func main() {

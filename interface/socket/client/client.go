@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
-	"github.com/hadihammurabi/cacing/interface/socket"
+	"github.com/cacing/cacing/interface/socket"
 	uuid "github.com/satori/go.uuid"
 )
 
