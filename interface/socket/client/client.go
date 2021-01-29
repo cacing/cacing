@@ -45,6 +45,7 @@ func ConnectTo(url *url.URL) error {
 	// reader := bufio.NewReader(os.Stdin)
 
 	var id uuid.UUID
+	promptTextColor := prompt.OptionPrefixTextColor(prompt.Green)
 
 	for {
 		rawMessage, _ := bufio.NewReader(conn).ReadBytes('\n')
@@ -56,6 +57,7 @@ func ConnectTo(url *url.URL) error {
 
 		switch commandFromServer.Type {
 		case socket.SignalSuccess:
+			promptTextColor = prompt.OptionPrefixTextColor(prompt.Green)
 			if commandFromServer.Payload == "login" {
 				id = uuid.FromStringOrNil(commandFromServer.User)
 				fmt.Println("Connected with id:", id)
@@ -65,10 +67,16 @@ func ConnectTo(url *url.URL) error {
 			}
 			fmt.Printf("%v\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
+			promptTextColor = prompt.OptionPrefixTextColor(prompt.Red)
 			fmt.Printf("<< %s >>\n\n", commandFromServer.Payload)
 		}
 
-		input := prompt.Input(">>> ", clientCompleter)
+		input := prompt.Input(
+			">>> ",
+			clientCompleter,
+			promptTextColor,
+			prompt.OptionSuggestionBGColor(prompt.DarkGray),
+		)
 		if strings.ToLower(input) == "exit" || strings.ToLower(input) == "quit" {
 			os.Exit(0)
 		}
