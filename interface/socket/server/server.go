@@ -13,11 +13,11 @@ import (
 	"github.com/hadihammurabi/cacing/interface/socket/client"
 
 	"github.com/hadihammurabi/cacing/interface/socket"
-	"github.com/hadihammurabi/cacing/storages"
-	"github.com/hadihammurabi/cacing/storages/mapstruct"
+	"github.com/hadihammurabi/cacing/storage"
+	"github.com/hadihammurabi/cacing/storage/mapstruct"
 )
 
-var store storages.Storage = mapstruct.NewMapStruct(map[string]mapstruct.Data{})
+var store storage.Storage = mapstruct.NewMapStruct(map[string]mapstruct.Data{})
 var clientPool = client.NewPool()
 
 // Config type

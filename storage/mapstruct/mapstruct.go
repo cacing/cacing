@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hadihammurabi/cacing/storages"
+	"github.com/hadihammurabi/cacing/storage"
 )
 
 // Data struct define structure of saved data
@@ -21,7 +21,7 @@ type MapStruct struct {
 }
 
 // NewMapStruct generate new MapStruct
-func NewMapStruct(initialData map[string]Data) storages.Storage {
+func NewMapStruct(initialData map[string]Data) storage.Storage {
 	return &MapStruct{
 		Data: initialData,
 	}

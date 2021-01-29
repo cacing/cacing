@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/hadihammurabi/cacing/interface/socket/client"
 	"github.com/hadihammurabi/cacing/interface/socket/server"
-	"github.com/hadihammurabi/cacing/utils"
+	"github.com/hadihammurabi/cacing/util"
 
 	"github.com/urfave/cli/v2"
 )
@@ -57,7 +57,7 @@ func NewCliApp(args []string) error {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					url, err := utils.ParseURL(ctx.String("dsn"))
+					url, err := util.ParseURL(ctx.String("dsn"))
 					if err != nil {
 						return err
 					}
