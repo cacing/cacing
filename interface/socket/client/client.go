@@ -75,7 +75,6 @@ func ConnectTo(url *url.URL) error {
 			">>> ",
 			clientCompleter,
 			promptTextColor,
-			prompt.OptionSuggestionBGColor(prompt.DarkGray),
 		)
 		if strings.ToLower(input) == "exit" || strings.ToLower(input) == "quit" {
 			os.Exit(0)
