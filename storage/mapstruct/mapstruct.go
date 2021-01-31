@@ -42,15 +42,13 @@ func (store *MapStruct) Exists(key string) bool {
 
 	// check data expiration
 	data, exist := store.Data[key]
-	if exist && data.Expiration > 0 {
-		if time.Now().UnixNano() > data.Expiration {
-			delete(store.Data, key)
-		}
-	}
-
-	// get data after cleaned
-	data, exist = store.Data[key]
 	if exist {
+		if data.Expiration > 0 {
+			if time.Now().UnixNano() > data.Expiration {
+				delete(store.Data, key)
+				return false
+			}
+		}
 		return true
 	}
 
@@ -94,18 +92,36 @@ func (store *MapStruct) Set(key string, val interface{}, t time.Duration) error 
 	return nil
 }
 
+func (store *MapStruct) SetExpired(key string, t time.Duration) (interface{}, error) {
+
+	store.Mu.Lock()
+
+	data, exist := store.Data[key]
+	if !exist {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	data.Expiration = time.Now().Add(t).UnixNano()
+	store.Data[key] = data
+
+	store.Mu.Unlock()
+
+	return data, nil
+}
+
 // Delete return deleted value
 // or error if any problems happen
 func (store *MapStruct) Delete(key string) (interface{}, error) {
 	// check data existence
+	store.Mu.Lock()
+
 	data, err := store.Get(key)
 	if err != nil {
 		return nil, fmt.Errorf("data not found")
 	}
 
-	store.Mu.Lock()
-	defer store.Mu.Unlock()
-
 	delete(store.Data, key)
+
+	store.Mu.Unlock()
 	return data, nil
 }

@@ -22,6 +22,8 @@ func NewExecFromCommandPayload(payload string) *Exec {
 		execType = ExecGet
 	case "del":
 		execType = ExecDel
+	case "exp":
+		execType = ExecExp
 	case "exists":
 		execType = ExecExists
 	}
