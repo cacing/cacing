@@ -25,6 +25,7 @@ const (
 	ExecSet    ExecType = "EXEC_SET"
 	ExecGet             = "EXEC_GET"
 	ExecDel             = "EXEC_DEL"
+	ExecExp             = "EXEC_EXP"
 	ExecExists          = "EXEC_EXISTS"
 )
 

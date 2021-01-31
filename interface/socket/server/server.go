@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -192,6 +193,73 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				})
 				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			}
+		case socket.ExecExp:
+			log.Println("SET EXP %s %s\n", exec.Args[0], exec.Args[1])
+			finish := time.Since(start)
+
+			strTime := exec.Args[1][0 : len(exec.Args[1])-1]
+			timeType := exec.Args[1][len(exec.Args[1])-1:]
+
+			intTime, err := strconv.Atoi(strTime)
+			if err != nil {
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
+					Type:    socket.SignalError,
+					User:    command.User,
+					Payload: fmt.Sprintf("%s", err.Error()),
+					Headers: socket.CommandHeader{
+						"TIME": finish.String(),
+					},
+				})
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+				return
+			}
+
+			var t time.Duration
+			var inTime = time.Duration(intTime)
+			switch timeType {
+			case "s":
+				t = inTime * time.Second
+			case "m":
+				t = inTime * time.Minute
+			case "h":
+				t = inTime * time.Hour
+			default:
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
+					Type:    socket.SignalError,
+					User:    command.User,
+					Payload: fmt.Sprintf("%s", err.Error()),
+					Headers: socket.CommandHeader{
+						"TIME": finish.String(),
+					},
+				})
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+				return
+			}
+
+			val, err := store.SetExpired(exec.Args[0], t)
+			if err != nil {
+
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
+					Type:    socket.SignalError,
+					User:    command.User,
+					Payload: fmt.Sprintf("%s", err.Error()),
+					Headers: socket.CommandHeader{
+						"TIME": finish.String(),
+					},
+				})
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+			} else {
+				replySignal, _ := socket.CommandToMessage(&socket.Command{
+					Type:    socket.SignalSuccess,
+					User:    command.User,
+					Payload: fmt.Sprintf("%v", val),
+					Headers: socket.CommandHeader{
+						"TIME": finish.String(),
+					},
+				})
+				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+			}
+
 		case socket.ExecDel:
 			val, err := store.Delete(exec.Args[0])
 			finish := time.Since(start)
