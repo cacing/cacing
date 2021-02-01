@@ -7,6 +7,7 @@ import "time"
 type Storage interface {
 	Set(key string, val interface{}, t time.Duration) error
 	Get(key string) (value interface{}, err error)
+	SetExpired(key string, t time.Duration) (interface{}, error)
 	Exists(key string) bool
 	Delete(key string) (interface{}, error)
 
