@@ -70,7 +70,7 @@ func ConnectTo(url *url.URL) error {
 			fmt.Printf("%v\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
 			promptTextColor = prompt.OptionPrefixTextColor(prompt.Red)
-			fmt.Printf("<< %s >>\n\n", commandFromServer.Payload)
+			fmt.Printf("<< %s >>\n\n", commandFromServer.Payload[0])
 		}
 
 		input := prompt.Input(
