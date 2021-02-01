@@ -49,6 +49,7 @@ func ConnectTo(url *url.URL) error {
 
 	for {
 		rawMessage, _ := bufio.NewReader(conn).ReadBytes('\n')
+		fmt.Println(rawMessage)
 		if bytes.Equal(rawMessage, []byte("")) {
 			fmt.Println("<< connection lost >>")
 			os.Exit(1)
@@ -58,12 +59,12 @@ func ConnectTo(url *url.URL) error {
 		switch commandFromServer.Type {
 		case socket.SignalSuccess:
 			promptTextColor = prompt.OptionPrefixTextColor(prompt.Green)
-			if commandFromServer.Payload == "login" {
+			if commandFromServer.Payload[0] == "login" {
 				id = uuid.FromStringOrNil(commandFromServer.User)
 				fmt.Println("Connected with id:", id)
-			} else if commandFromServer.Payload == string(socket.ExecSet) {
+			} else if commandFromServer.Payload[0] == string(socket.ExecSet) {
 			} else {
-				fmt.Println(commandFromServer.Payload)
+				fmt.Println(commandFromServer.Payload[0])
 			}
 			fmt.Printf("%v\n\n", commandFromServer.Headers["TIME"])
 		case socket.SignalError:
@@ -83,7 +84,7 @@ func ConnectTo(url *url.URL) error {
 		signal, _ := socket.CommandToMessage(&socket.Command{
 			Type:    socket.SignalExec,
 			User:    id.String(),
-			Payload: input,
+			Payload: strings.Split(input, " "),
 		})
 		conn.Write([]byte(fmt.Sprintf("%s\n", signal)))
 

@@ -8,7 +8,7 @@ import (
 type Command struct {
 	Type    Signal        `json:"t"`
 	User    string        `json:"u"`
-	Payload string        `json:"p,omitempty"`
+	Payload []string      `json:"p,omitempty"`
 	Headers CommandHeader `json:"h,omitempty"`
 }
 

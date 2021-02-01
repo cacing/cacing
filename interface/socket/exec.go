@@ -11,11 +11,10 @@ type Exec struct {
 }
 
 // NewExecFromCommandPayload create exec using command payload
-func NewExecFromCommandPayload(payload string) *Exec {
-	payloadSplitted := strings.Split(payload, " ")
+func NewExecFromCommandPayload(payload []string) *Exec {
 	var execType ExecType
 
-	switch strings.ToLower(payloadSplitted[0]) {
+	switch strings.ToLower(payload[0]) {
 	case "set":
 		execType = ExecSet
 	case "get":
@@ -26,10 +25,7 @@ func NewExecFromCommandPayload(payload string) *Exec {
 		execType = ExecExists
 	}
 
-	args := make([]string, 0)
-	if len(payloadSplitted) > 1 {
-		args = payloadSplitted[1:]
-	}
+	args := payload[1:]
 
 	return &Exec{
 		execType,

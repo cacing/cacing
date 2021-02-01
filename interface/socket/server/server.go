@@ -74,6 +74,7 @@ func RunServer(config *Config) error {
 
 func handleConnection(config *Config, conn net.Conn) {
 	buffer, err := bufio.NewReader(conn).ReadBytes('\n')
+	fmt.Println(string(buffer))
 
 	if err != nil {
 		log.Println("Client left.")
@@ -86,7 +87,7 @@ func handleConnection(config *Config, conn net.Conn) {
 	if err != nil {
 		replySignal, _ := socket.CommandToMessage(&socket.Command{
 			Type:    socket.SignalError,
-			Payload: fmt.Sprintf("%s", err.Error()),
+			Payload: []string{fmt.Sprintf("%s", err.Error())},
 		})
 		conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 	}
@@ -121,7 +122,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			finish := time.Since(start)
 			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalError,
-				Payload: fmt.Sprintf("%s", err.Error()),
+				Payload: []string{fmt.Sprintf("%s", err.Error())},
 				Headers: socket.CommandHeader{
 					"TIME": finish.String(),
 				},
@@ -133,7 +134,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 		replySignal, _ := socket.CommandToMessage(&socket.Command{
 			Type:    socket.SignalSuccess,
 			User:    newClientID.String(),
-			Payload: "login",
+			Payload: []string{"login"},
 			Headers: socket.CommandHeader{
 				"TIME": finish.String(),
 			},
@@ -146,7 +147,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			finish := time.Since(start)
 			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalError,
-				Payload: fmt.Sprintf("%s", err.Error()),
+				Payload: []string{fmt.Sprintf("%s", err.Error())},
 				Headers: socket.CommandHeader{
 					"TIME": finish.String(),
 				},
@@ -162,7 +163,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalSuccess,
 				User:    command.User,
-				Payload: string(socket.ExecSet),
+				Payload: []string{string(socket.ExecSet)},
 				Headers: socket.CommandHeader{
 					"TIME": finish.String(),
 				},
@@ -175,7 +176,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
-					Payload: fmt.Sprintf("%s", err.Error()),
+					Payload: []string{fmt.Sprintf("%s", err.Error())},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -185,7 +186,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
-					Payload: fmt.Sprintf("%v", val),
+					Payload: []string{fmt.Sprintf("%v", val)},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -199,7 +200,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
-					Payload: fmt.Sprintf("%s", err.Error()),
+					Payload: []string{fmt.Sprintf("%s", err.Error())},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -209,7 +210,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
-					Payload: fmt.Sprintf("%v", val),
+					Payload: []string{fmt.Sprintf("%v", val)},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -226,7 +227,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 			replySignal, _ := socket.CommandToMessage(&socket.Command{
 				Type:    socket.SignalSuccess,
 				User:    command.User,
-				Payload: fmt.Sprint(result),
+				Payload: []string{fmt.Sprint(result)},
 				Headers: socket.CommandHeader{
 					"TIME": finish.String(),
 				},
