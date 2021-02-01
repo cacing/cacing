@@ -195,7 +195,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
 			}
 		case socket.ExecExp:
-			log.Println("SET EXP %s %s\n", exec.Args[0], exec.Args[1])
+			log.Printf("SET EXP %s %s\n", exec.Args[0], exec.Args[1])
 			finish := time.Since(start)
 
 			strTime := exec.Args[1][0 : len(exec.Args[1])-1]
@@ -206,7 +206,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
-					Payload: fmt.Sprintf("%s", err.Error()),
+					Payload: []string{fmt.Sprintf("%s", err.Error())},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -228,7 +228,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
-					Payload: fmt.Sprintf("%s", err.Error()),
+					Payload: []string{fmt.Sprintf("%s", err.Error())},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -243,7 +243,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalError,
 					User:    command.User,
-					Payload: fmt.Sprintf("%s", err.Error()),
+					Payload: []string{fmt.Sprintf("%s", err.Error())},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
@@ -253,7 +253,7 @@ func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
 				replySignal, _ := socket.CommandToMessage(&socket.Command{
 					Type:    socket.SignalSuccess,
 					User:    command.User,
-					Payload: fmt.Sprintf("%v", val),
+					Payload: []string{fmt.Sprintf("%v", val)},
 					Headers: socket.CommandHeader{
 						"TIME": finish.String(),
 					},
