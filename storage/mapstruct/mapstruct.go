@@ -111,17 +111,13 @@ func (store *MapStruct) SetExpired(key string, t time.Duration) (interface{}, er
 
 // Delete return deleted value
 // or error if any problems happen
-func (store *MapStruct) Delete(key string) (interface{}, error) {
+func (store *MapStruct) Delete(key ...string) (interface{}, error) {
 	// check data existence
 	store.Mu.Lock()
-
-	data, err := store.Get(key)
-	if err != nil {
-		return nil, fmt.Errorf("data not found")
+	defer store.Mu.Unlock()
+	for _, k := range key {
+		delete(store.Data, k)
 	}
 
-	delete(store.Data, key)
-
-	store.Mu.Unlock()
-	return data, nil
+	return nil, nil
 }

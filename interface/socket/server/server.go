@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/cacing/cacing/interface/socket/client"
@@ -74,27 +73,55 @@ func RunServer(config *Config) error {
 }
 
 func handleConnection(config *Config, conn net.Conn) {
-	buffer, err := bufio.NewReader(conn).ReadBytes('\n')
-	fmt.Println(string(buffer))
-
-	if err != nil {
-		log.Println("Client left.")
-		conn.Close()
-		return
+	if tcp, ok := conn.(*net.TCPConn); ok {
+		_ = tcp.SetNoDelay(true)
 	}
 
-	clientMessage := buffer[:len(buffer)-1]
-	command, err := socket.NewCommandFromMessage(clientMessage)
-	if err != nil {
-		replySignal, _ := socket.CommandToMessage(&socket.Command{
-			Type:    socket.SignalError,
-			Payload: []string{fmt.Sprintf("%s", err.Error())},
-		})
-		conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
+	for {
+		conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
+		reader := bufio.NewReader(conn)
+		cmd := command{reader}
+		value, err := cmd.Read()
+		if err != nil {
+			if err != io.EOF {
+				fmt.Printf("invalid request: %s\n", err.Error())
+			}
+			continue
+		}
+		if value.Type != ARRAY {
+			fmt.Println("invalid request, expected array")
+			continue
+		}
+		if len(value.Array) <= 0 {
+			fmt.Println("invalid request, expected array lenght > 0")
+			continue
+		}
+		command := string(value.Array[0].Bulk)
+		args := value.Array[1:]
+
+		if command == "AUTH" {
+			username := string(args[0].Bulk)
+			password := string(args[1].Bulk)
+			err := authenticateClient(config, username, password)
+			if err != nil {
+				conn.Write(fmt.Appendf([]byte{}, "-WRONGPASS %s\r\n", err.Error()))
+				conn.Close()
+				return
+			}
+			conn.Write(fmt.Appendf([]byte{}, "+OK\r\n"))
+			continue
+		}
+
+		handler, ok := Handler(config, command, args)
+		if !ok {
+			fmt.Printf("invalid request, unexpected command: %s\n", command)
+			conn.Write(nil)
+		} else {
+			conn.Write(fmt.Appendf([]byte{}, "%s\r\n", handler()))
+		}
+
 	}
 
-	resolveCommand(config, conn, command)
-	handleConnection(config, conn)
 }
 
 func authenticateClient(config *Config, username string, password string) error {
@@ -112,195 +139,4 @@ func clientExists(id string) error {
 	}
 
 	return errors.New("invalid client id")
-}
-
-func resolveCommand(config *Config, conn net.Conn, command *socket.Command) {
-	start := time.Now()
-	if command.Type == socket.SignalConnect {
-		user := strings.Split(command.User, " ")
-		err := authenticateClient(config, user[0], user[1])
-		if err != nil {
-			finish := time.Since(start)
-			replySignal, _ := socket.CommandToMessage(&socket.Command{
-				Type:    socket.SignalError,
-				Payload: []string{fmt.Sprintf("%s", err.Error())},
-				Headers: socket.CommandHeader{
-					"TIME": finish.String(),
-				},
-			})
-			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-		}
-		newClientID, _ := clientPool.Add()
-		finish := time.Since(start)
-		replySignal, _ := socket.CommandToMessage(&socket.Command{
-			Type:    socket.SignalSuccess,
-			User:    newClientID.String(),
-			Payload: []string{"login"},
-			Headers: socket.CommandHeader{
-				"TIME": finish.String(),
-			},
-		})
-		conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-		log.Println("New client connected.")
-	} else if command.Type == socket.SignalExec {
-		err := clientExists(command.User)
-		if err != nil {
-			finish := time.Since(start)
-			replySignal, _ := socket.CommandToMessage(&socket.Command{
-				Type:    socket.SignalError,
-				Payload: []string{fmt.Sprintf("%s", err.Error())},
-				Headers: socket.CommandHeader{
-					"TIME": finish.String(),
-				},
-			})
-			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-		}
-		exec := socket.NewExecFromCommandPayload(command.Payload)
-		switch exec.Type {
-		case socket.ExecSet:
-			log.Printf("SET %s %s\n", exec.Args[0], exec.Args[1])
-			store.Set(exec.Args[0], exec.Args[1], 0)
-			finish := time.Since(start)
-			replySignal, _ := socket.CommandToMessage(&socket.Command{
-				Type:    socket.SignalSuccess,
-				User:    command.User,
-				Payload: []string{string(socket.ExecSet)},
-				Headers: socket.CommandHeader{
-					"TIME": finish.String(),
-				},
-			})
-			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-		case socket.ExecGet:
-			val, err := store.Get(exec.Args[0])
-			finish := time.Since(start)
-			if err != nil {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalError,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%s", err.Error())},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			} else {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalSuccess,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%v", val)},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			}
-		case socket.ExecExp:
-			log.Printf("SET EXP %s %s\n", exec.Args[0], exec.Args[1])
-			finish := time.Since(start)
-
-			strTime := exec.Args[1][0 : len(exec.Args[1])-1]
-			timeType := exec.Args[1][len(exec.Args[1])-1:]
-
-			intTime, err := strconv.Atoi(strTime)
-			if err != nil {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalError,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%s", err.Error())},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-				return
-			}
-
-			var t time.Duration
-			var inTime = time.Duration(intTime)
-			switch timeType {
-			case "s":
-				t = inTime * time.Second
-			case "m":
-				t = inTime * time.Minute
-			case "h":
-				t = inTime * time.Hour
-			default:
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalError,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%s", err.Error())},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-				return
-			}
-
-			val, err := store.SetExpired(exec.Args[0], t)
-			if err != nil {
-
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalError,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%s", err.Error())},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			} else {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalSuccess,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%v", val)},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			}
-
-		case socket.ExecDel:
-			val, err := store.Delete(exec.Args[0])
-			finish := time.Since(start)
-			if err != nil {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalError,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%s", err.Error())},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			} else {
-				replySignal, _ := socket.CommandToMessage(&socket.Command{
-					Type:    socket.SignalSuccess,
-					User:    command.User,
-					Payload: []string{fmt.Sprintf("%v", val)},
-					Headers: socket.CommandHeader{
-						"TIME": finish.String(),
-					},
-				})
-				conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-			}
-		case socket.ExecExists:
-			exists := store.Exists(exec.Args[0])
-			result := 0
-			if exists {
-				result = 1
-			}
-			finish := time.Since(start)
-			replySignal, _ := socket.CommandToMessage(&socket.Command{
-				Type:    socket.SignalSuccess,
-				User:    command.User,
-				Payload: []string{fmt.Sprint(result)},
-				Headers: socket.CommandHeader{
-					"TIME": finish.String(),
-				},
-			})
-			conn.Write([]byte(fmt.Sprintf("%s\n", replySignal)))
-		}
-	}
 }

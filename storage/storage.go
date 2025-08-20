@@ -9,7 +9,7 @@ type Storage interface {
 	Get(key string) (value interface{}, err error)
 	SetExpired(key string, t time.Duration) (interface{}, error)
 	Exists(key string) bool
-	Delete(key string) (interface{}, error)
+	Delete(key ...string) (interface{}, error)
 
 	GetSize() uint
 }
